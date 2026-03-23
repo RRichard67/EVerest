@@ -135,6 +135,11 @@ template <> void convert(const datatypes::MeterInfo& in, iso20_ac_MeterInfoType&
     convert_meterinfo(in, out);
 }
 
+template <> void convert(const datatypes::MeterInfo& in, iso20_ac_der_iec_MeterInfoType& out) {
+    init_iso20_ac_der_iec_MeterInfoType(&out);
+    convert_meterinfo(in, out);
+}
+
 template <typename cb_MeterInfoType>
 void convert_meterinfo_inverse(const cb_MeterInfoType& in, datatypes::MeterInfo& out) {
     out.meter_id = CB2CPP_STRING(in.MeterID);
@@ -152,6 +157,10 @@ template <> void convert(const iso20_dc_MeterInfoType& in, datatypes::MeterInfo&
 }
 
 template <> void convert(const iso20_ac_MeterInfoType& in, datatypes::MeterInfo& out) {
+    convert_meterinfo_inverse(in, out);
+}
+
+template <> void convert(const iso20_ac_der_iec_MeterInfoType& in, datatypes::MeterInfo& out) {
     convert_meterinfo_inverse(in, out);
 }
 
