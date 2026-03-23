@@ -205,7 +205,7 @@ bool fd_event_handler::register_event_handler(event_fd* fd, event_handler_type c
 }
 
 bool fd_event_handler::register_event_handler(event_fd* fd, event_handler_empty_type const& handler) {
-    return register_event_handler(fd, [handler](event_list const&){handler();});
+    return register_event_handler(fd, [handler](event_list const&) { handler(); });
 }
 
 bool fd_event_handler::register_event_handler(timer_fd* fd, event_handler_type const& handler) {
@@ -223,7 +223,7 @@ bool fd_event_handler::register_event_handler(timer_fd* fd, event_handler_type c
 }
 
 bool fd_event_handler::register_event_handler(timer_fd* fd, event_handler_empty_type const& handler) {
-    return register_event_handler(fd, [handler](event_list const&){handler();});
+    return register_event_handler(fd, [handler](event_list const&) { handler(); });
 }
 
 bool fd_event_handler::register_event_handler(fd_event_sync_interface* obj) {
@@ -231,7 +231,8 @@ bool fd_event_handler::register_event_handler(fd_event_sync_interface* obj) {
         return false;
     }
     auto raw = obj->get_poll_fd();
-    return register_event_handler(raw, [obj](event_list const&) { obj->sync(); }, poll_events::read);
+    return register_event_handler(
+        raw, [obj](event_list const&) { obj->sync(); }, poll_events::read);
 }
 
 bool fd_event_handler::register_event_handler(fd_event_register_interface* obj) {
