@@ -3,7 +3,7 @@
 #ifndef {{ info.hpp_guard }}
 #define {{ info.hpp_guard }}
 
-{{ print_template_info('4') }}
+{{ print_template_info('5') }}
 
 #include <framework/ModuleAdapter.hpp>
 #include <utils/types.hpp>
@@ -44,7 +44,7 @@ public:
     {% else %}
     // variables available for subscription
     {% for var in vars %}
-    void subscribe_{{ var.name }}(const std::function<void({% if var.json_type != 'null' %}{{ cpp_type(var) }}{% endif %})>& listener) {
+    void subscribe_{{ var.name }}(const std::function<void({% if var.json_type != 'null' %}const {{ cpp_type(var) }}&{% endif %})>& listener) {
         ValueCallback cb = [listener](const Value& value) {
         {% if 'object_type' in var %}
             listener(value);
@@ -105,9 +105,7 @@ public:
         auto {{ arg.name }}_string = {{ enum_to_string(arg.enum_type) }}({{ arg.name }});
         args["{{ arg.name }}"] = {{ var_to_any(arg, arg.name + '_string') }};
         {% elif 'object_type' in arg %}
-        json {{ arg.name }}_json = {{ arg.name }};
-        Object {{ arg.name }}_object = {{ arg.name }}_json;
-        args["{{ arg.name }}"] = {{ var_to_any(arg, arg.name + '_object') }};
+        args["{{ arg.name }}"] = {{ arg.name }};
         {% elif 'array_type' in arg %}
         {% if 'array_type_contains_enum' in arg %}
         Array {{ arg.name }}_array;

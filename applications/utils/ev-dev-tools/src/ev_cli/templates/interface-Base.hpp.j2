@@ -3,7 +3,7 @@
 #ifndef {{ info.hpp_guard }}
 #define {{ info.hpp_guard }}
 
-{{ print_template_info('5') }}
+{{ print_template_info('6') }}
 
 #include <framework/ModuleAdapter.hpp>
 #include <utils/types.hpp>
@@ -49,10 +49,10 @@ public:
     // publish functions for variables
     {% for var in vars %}
     void publish_{{ var.name }}(
-    {% if 'array_type' in var %}
+    {%- if 'array_type' in var %}
         const std::vector<{{ var.array_type }}>&
     {%- elif 'object_type' in var %}
-        {{-  var.object_type }}
+        {{- 'const '}} {{-  var.object_type }}&
     {%- elif 'enum_type' in var %}
         {{-  var.enum_type }}
     {%- else %}
@@ -60,9 +60,7 @@ public:
     {%- endif -%}
     {{ ' value) {' }}
     {% if 'object_type' in var %}
-        json json_value = value;
-        Object object_value = json_value;
-        _ev->publish(_name, "{{ var.name }}", object_value);
+        _ev->publish(_name, "{{ var.name }}", value);
     {% elif 'enum_type' in var %}
         auto value_string = {{ enum_to_string(var.enum_type) }}(value);
         _ev->publish(_name, "{{ var.name }}", value_string);
@@ -146,7 +144,7 @@ private:
             {% endfor %}
         };
         {% endif %}
-        {{ cmd.name }}_cmd.cmd = [this](Parameters args) -> Result {
+        {{ cmd.name }}_cmd.cmd = [this](const Parameters& args) -> Result {
         {% for arg in cmd.args %}
             {% if 'object_type' in arg %}
             {{ arg.object_type }} {{ arg.name }} = args["{{ arg.name }}"];

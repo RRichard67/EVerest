@@ -483,7 +483,7 @@ void MessageHandler::handle_module_ready_message(const std::string& topic, const
 
 void MessageHandler::handle_cmd_result(const std::string& topic, const json& payload) {
     const auto& data = payload.at("data").at("data");
-    const auto id = data.at("id").get<std::string>();
+    const auto& id = data.at("id").get<std::string>();
 
     std::shared_ptr<TypedHandler> handler_copy;
     {

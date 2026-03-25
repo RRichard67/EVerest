@@ -312,7 +312,7 @@ void Everest::disconnect() {
     this->mqtt_abstraction->disconnect();
 }
 
-json Everest::call_cmd(const Requirement& req, const std::string& cmd_name, json json_args) {
+json Everest::call_cmd(const Requirement& req, const std::string& cmd_name, const json& json_args) {
     BOOST_LOG_FUNCTION();
 
     // resolve requirement
@@ -320,14 +320,14 @@ json Everest::call_cmd(const Requirement& req, const std::string& cmd_name, json
     const auto& connection = connections.at(req.index);
 
     // extract manifest definition of this command
-    const json cmd_definition = get_cmd_definition(connection.module_id, connection.implementation_id, cmd_name, true);
+    const json& cmd_definition = get_cmd_definition(connection.module_id, connection.implementation_id, cmd_name, true);
 
-    const json return_type = cmd_definition.at("result").at("type");
-
-    std::set<std::string> arg_names = Config::keys(json_args);
+    const json& return_type = cmd_definition.at("result").at("type");
 
     // check args against manifest
     if (this->validate_data_with_schema) {
+        std::set<std::string> arg_names = Config::keys(json_args);
+
         if (cmd_definition.at("arguments").size() != json_args.size()) {
             EVLOG_AND_THROW(EverestApiError(
                 fmt::format("Call to {}->{}({}): Argument count does not match manifest!",
@@ -350,9 +350,7 @@ json Everest::call_cmd(const Requirement& req, const std::string& cmd_name, json
                 this->config.printable_identifier(connection.module_id, connection.implementation_id), cmd_name,
                 fmt::join(arg_names, ","), fmt::join(arg_names, ","), fmt::join(cmd_arguments, ","))));
         }
-    }
 
-    if (this->validate_data_with_schema) {
         for (const auto& arg_name : arg_names) {
             try {
                 json_validator validator(
@@ -459,7 +457,7 @@ json Everest::call_cmd(const Requirement& req, const std::string& cmd_name, json
     return result.result.value();
 }
 
-void Everest::publish_var(const std::string& impl_id, const std::string& var_name, json value) {
+void Everest::publish_var(const std::string& impl_id, const std::string& var_name, const json& value) {
     BOOST_LOG_FUNCTION();
 
     // check arguments
@@ -493,8 +491,7 @@ void Everest::publish_var(const std::string& impl_id, const std::string& var_nam
 
     const auto var_topic = fmt::format("{}/var/{}", this->config.mqtt_prefix(this->module_id, impl_id), var_name);
 
-    const json var_publish_data = {{"data", value}};
-    MqttMessagePayload payload{MqttMessageType::Var, var_publish_data};
+    MqttMessagePayload payload{MqttMessageType::Var, {{"data", value}}};
 
     // FIXME(kai): implement an efficient way of choosing qos for each variable
     this->mqtt_abstraction->publish(var_topic, payload, QOS::QOS2);
@@ -509,10 +506,10 @@ void Everest::subscribe_var(const Requirement& req, const std::string& var_name,
     const auto& connections = this->config.resolve_requirement(this->module_id, req.id);
     const auto& connection = connections.at(req.index);
 
-    const auto requirement_module_id = connection.module_id;
-    const auto module_name = this->config.get_module_name(requirement_module_id);
-    const auto requirement_impl_id = connection.implementation_id;
-    const auto requirement_impl_manifest = this->config.get_interface_definitions().at(
+    const auto& requirement_module_id = connection.module_id;
+    const auto& module_name = this->config.get_module_name(requirement_module_id);
+    const auto& requirement_impl_id = connection.implementation_id;
+    const auto& requirement_impl_manifest = this->config.get_interface_definitions().at(
         this->config.get_interfaces().at(module_name).at(requirement_impl_id));
 
     if (!requirement_impl_manifest.at("vars").contains(var_name)) {
@@ -521,7 +518,7 @@ void Everest::subscribe_var(const Requirement& req, const std::string& var_name,
                         this->config.printable_identifier(requirement_module_id, requirement_impl_id), var_name)));
     }
 
-    const auto requirement_manifest_vardef = requirement_impl_manifest.at("vars").at(var_name);
+    const auto& requirement_manifest_vardef = requirement_impl_manifest.at("vars").at(var_name);
 
     const auto handler = [this, requirement_module_id, requirement_impl_id, requirement_manifest_vardef, var_name,
                           callback](const std::string&, json const& data) {
