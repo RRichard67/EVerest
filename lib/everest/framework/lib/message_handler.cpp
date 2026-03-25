@@ -417,8 +417,9 @@ void MessageHandler::handle_var_message(const std::string& topic, const json& da
         handler_copy = copy_shared_handler(handle->var, topic);
     }
 
+    const auto& json_data = data.at("data");
     for (const auto& handler : handler_copy) {
-        (*handler->handler)(topic, data.at("data"));
+        (*handler->handler)(topic, json_data);
     }
 }
 
