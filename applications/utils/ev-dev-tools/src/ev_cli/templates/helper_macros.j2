@@ -1,4 +1,4 @@
-{% macro cpp_type(type, interface=none) -%}
+{% macro cpp_type(type, interface=none, call=false) -%}
 {% if type.is_variant -%}
 std::variant<{{ type.cpp_type|join(', ') }}>
 {%- else -%}
@@ -6,7 +6,9 @@ std::variant<{{ type.cpp_type|join(', ') }}>
         {{ interface + '::' + type.object_type }}
     {% else %}
         {% if 'object_type' in type -%}
+        {% if call -%}{{'const '}}{%- endif %}
             {{ type.object_type }}
+        {% if call -%}&{%- endif %}
         {%- elif 'enum_type' in type -%}
             {{ type.enum_type }}
         {%- elif 'array_type' in type -%}
@@ -45,7 +47,7 @@ static_cast<{{ arg.cpp_type }}>
 {% macro call_cmd_signature(cmd, interface=none) -%}
 {{ result_type(cmd.result, interface) }} call_{{ cmd.name }}(
 {%- for arg in cmd.args -%}
-{{ cpp_type(arg) }} {{ arg.name }}{{ ', ' if not loop.last }}
+{{ cpp_type(arg, none, true) }} {{ arg.name }}{{ ', ' if not loop.last }}
 {%- endfor -%}
 )
 {%- endmacro %}
