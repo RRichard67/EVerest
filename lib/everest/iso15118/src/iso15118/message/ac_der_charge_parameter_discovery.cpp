@@ -9,12 +9,7 @@
 
 namespace iso15118::message_20 {
 
-using AC_ModeReq = datatypes::AC_CPDReqEnergyTransferMode;
-using BPT_AC_ModeReq = datatypes::BPT_AC_CPDReqEnergyTransferMode;
 using DER_AC_ModeReq = datatypes::DER_AC_CPDReqEnergyTransferMode;
-
-using AC_ModeRes = datatypes::AC_CPDResEnergyTransferMode;
-using BPT_AC_ModeRes = datatypes::BPT_AC_CPDResEnergyTransferMode;
 using DER_AC_ModeRes = datatypes::DER_AC_CPDResEnergyTransferMode;
 
 template <>
@@ -49,27 +44,14 @@ void convert(const datatypes::ReactivePowerLimits& in, struct iso20_ac_der_iec_E
     CPP2CB_CONVERT_IF_USED(in.min_discharge_reactive_power_L3, out.EVMinimumDischargeReactivePower_L3);
 }
 
-template <typename InType> void convert(const InType& in, AC_ModeReq& out) {
+template <> void convert(const struct iso20_ac_der_iec_DER_AC_CPDReqEnergyTransferModeType& in, DER_AC_ModeReq& out) {
     convert(in.EVMaximumChargePower, out.max_charge_power);
     CB2CPP_CONVERT_IF_USED(in.EVMaximumChargePower_L2, out.max_charge_power_L2);
     CB2CPP_CONVERT_IF_USED(in.EVMaximumChargePower_L3, out.max_charge_power_L3);
     convert(in.EVMinimumChargePower, out.min_charge_power);
     CB2CPP_CONVERT_IF_USED(in.EVMinimumChargePower_L2, out.min_charge_power_L2);
     CB2CPP_CONVERT_IF_USED(in.EVMinimumChargePower_L3, out.min_charge_power_L3);
-}
 
-template <> void convert(const struct iso20_ac_der_iec_BPT_AC_CPDReqEnergyTransferModeType& in, BPT_AC_ModeReq& out) {
-    convert(in, static_cast<AC_ModeReq&>(out));
-    convert(in.EVMaximumDischargePower, out.max_discharge_power);
-    CB2CPP_CONVERT_IF_USED(in.EVMaximumDischargePower_L2, out.max_discharge_power_L2);
-    CB2CPP_CONVERT_IF_USED(in.EVMaximumDischargePower_L3, out.max_discharge_power_L3);
-    convert(in.EVMinimumDischargePower, out.min_discharge_power);
-    CB2CPP_CONVERT_IF_USED(in.EVMinimumDischargePower_L2, out.min_discharge_power_L2);
-    CB2CPP_CONVERT_IF_USED(in.EVMinimumDischargePower_L3, out.min_discharge_power_L3);
-}
-
-template <> void convert(const struct iso20_ac_der_iec_DER_AC_CPDReqEnergyTransferModeType& in, DER_AC_ModeReq& out) {
-    convert(in, static_cast<AC_ModeReq&>(out));
     cb_convert_enum(in.EVProcessing, out.processing);
     convert(in.EVMaximumDischargePower, out.max_discharge_power);
     CB2CPP_CONVERT_IF_USED(in.EVMaximumDischargePower_L2, out.max_discharge_power_L2);
@@ -85,17 +67,11 @@ template <>
 void convert(const struct iso20_ac_der_iec_AC_ChargeParameterDiscoveryReqType& in,
              DER_AC_ChargeParameterDiscoveryRequest& out) {
     convert(in.Header, out.header);
-    if (in.AC_CPDReqEnergyTransferMode_isUsed) {
-        auto& mode_out = out.transfer_mode.emplace<AC_ModeReq>();
-        convert(in.AC_CPDReqEnergyTransferMode, mode_out);
-    } else if (in.BPT_AC_CPDReqEnergyTransferMode_isUsed) {
-        auto& mode_out = out.transfer_mode.emplace<BPT_AC_ModeReq>();
-        convert(in.BPT_AC_CPDReqEnergyTransferMode, mode_out);
-    } else if (in.DER_AC_CPDReqEnergyTransferMode_isUsed) {
-        auto& mode_out = out.transfer_mode.emplace<DER_AC_ModeReq>();
-        convert(in.DER_AC_CPDReqEnergyTransferMode, mode_out);
+
+    if (in.DER_AC_CPDReqEnergyTransferMode_isUsed) {
+        convert(in.DER_AC_CPDReqEnergyTransferMode, out.transfer_mode);
     } else {
-        // FIXME (aw): fail, should not happen!
+        // TODO(SL): Add warning that a transfer mode other then DER
     }
 }
 
@@ -103,64 +79,37 @@ template <> void insert_type(VariantAccess& va, const struct iso20_ac_der_iec_AC
     va.insert_type<DER_AC_ChargeParameterDiscoveryRequest>(in);
 }
 
-struct ModeRequestVisitor {
-public:
-    ModeRequestVisitor(iso20_ac_der_iec_AC_ChargeParameterDiscoveryReqType& req_) : req(req_) {};
-    void operator()(const AC_ModeReq& in) {
-        init_iso20_ac_der_iec_AC_CPDReqEnergyTransferModeType(&req.AC_CPDReqEnergyTransferMode);
-        CB_SET_USED(req.AC_CPDReqEnergyTransferMode);
-        convert_common(in, req.AC_CPDReqEnergyTransferMode);
-    }
+template <>
+void convert(const datatypes::DER_AC_CPDReqEnergyTransferMode& in,
+             struct iso20_ac_der_iec_DER_AC_CPDReqEnergyTransferModeType& out) {
+    init_iso20_ac_der_iec_DER_AC_CPDReqEnergyTransferModeType(&out);
 
-    void operator()(const BPT_AC_ModeReq& in) {
-        init_iso20_ac_der_iec_BPT_AC_CPDReqEnergyTransferModeType(&req.BPT_AC_CPDReqEnergyTransferMode);
-        CB_SET_USED(req.BPT_AC_CPDReqEnergyTransferMode);
-        auto& out = req.BPT_AC_CPDReqEnergyTransferMode;
-        convert_common(in, out);
-        convert(in.max_discharge_power, out.EVMaximumDischargePower);
-        CPP2CB_CONVERT_IF_USED(in.max_discharge_power_L2, out.EVMaximumDischargePower_L2);
-        CPP2CB_CONVERT_IF_USED(in.max_discharge_power_L3, out.EVMaximumDischargePower_L3);
-        convert(in.min_discharge_power, out.EVMinimumDischargePower);
-        CPP2CB_CONVERT_IF_USED(in.min_discharge_power_L2, out.EVMinimumDischargePower_L2);
-        CPP2CB_CONVERT_IF_USED(in.min_discharge_power_L3, out.EVMinimumDischargePower_L3);
-    }
+    convert(in.max_charge_power, out.EVMaximumChargePower);
+    CPP2CB_CONVERT_IF_USED(in.max_charge_power_L2, out.EVMaximumChargePower_L2);
+    CPP2CB_CONVERT_IF_USED(in.max_charge_power_L3, out.EVMaximumChargePower_L3);
+    convert(in.min_charge_power, out.EVMinimumChargePower);
+    CPP2CB_CONVERT_IF_USED(in.min_charge_power_L2, out.EVMinimumChargePower_L2);
+    CPP2CB_CONVERT_IF_USED(in.min_charge_power_L3, out.EVMinimumChargePower_L3);
 
-    void operator()(const DER_AC_ModeReq& in) {
-        init_iso20_ac_der_iec_DER_AC_CPDReqEnergyTransferModeType(&req.DER_AC_CPDReqEnergyTransferMode);
-        CB_SET_USED(req.DER_AC_CPDReqEnergyTransferMode);
-        auto& out = req.DER_AC_CPDReqEnergyTransferMode;
-        convert_common(in, out);
-        cb_convert_enum(in.processing, out.EVProcessing);
-        convert(in.max_discharge_power, out.EVMaximumDischargePower);
-        CPP2CB_CONVERT_IF_USED(in.max_discharge_power_L2, out.EVMaximumDischargePower_L2);
-        CPP2CB_CONVERT_IF_USED(in.max_discharge_power_L3, out.EVMaximumDischargePower_L3);
-        convert(in.min_discharge_power, out.EVMinimumDischargePower);
-        CPP2CB_CONVERT_IF_USED(in.min_discharge_power_L2, out.EVMinimumDischargePower_L2);
-        CPP2CB_CONVERT_IF_USED(in.min_discharge_power_L3, out.EVMinimumDischargePower_L3);
-        CPP2CB_CONVERT_IF_USED(in.session_total_discharge_energy_available, out.EVSessionTotalDischargeEnergyAvailable);
-        CPP2CB_CONVERT_IF_USED(in.reactive_power_limits, out.EVReactivePowerLimits);
-    }
-
-    template <typename ModeReqTypeIn, typename ModeReqTypeOut>
-    static void convert_common(const ModeReqTypeIn& in, ModeReqTypeOut& out) {
-        convert(in.max_charge_power, out.EVMaximumChargePower);
-        CPP2CB_CONVERT_IF_USED(in.max_charge_power_L2, out.EVMaximumChargePower_L2);
-        CPP2CB_CONVERT_IF_USED(in.max_charge_power_L3, out.EVMaximumChargePower_L3);
-        convert(in.min_charge_power, out.EVMinimumChargePower);
-        CPP2CB_CONVERT_IF_USED(in.min_charge_power_L2, out.EVMinimumChargePower_L2);
-        CPP2CB_CONVERT_IF_USED(in.min_charge_power_L3, out.EVMinimumChargePower_L3);
-    }
-
-private:
-    iso20_ac_der_iec_AC_ChargeParameterDiscoveryReqType& req;
-};
+    cb_convert_enum(in.processing, out.EVProcessing);
+    convert(in.max_discharge_power, out.EVMaximumDischargePower);
+    CPP2CB_CONVERT_IF_USED(in.max_discharge_power_L2, out.EVMaximumDischargePower_L2);
+    CPP2CB_CONVERT_IF_USED(in.max_discharge_power_L3, out.EVMaximumDischargePower_L3);
+    convert(in.min_discharge_power, out.EVMinimumDischargePower);
+    CPP2CB_CONVERT_IF_USED(in.min_discharge_power_L2, out.EVMinimumDischargePower_L2);
+    CPP2CB_CONVERT_IF_USED(in.min_discharge_power_L3, out.EVMinimumDischargePower_L3);
+    CPP2CB_CONVERT_IF_USED(in.session_total_discharge_energy_available, out.EVSessionTotalDischargeEnergyAvailable);
+    CPP2CB_CONVERT_IF_USED(in.reactive_power_limits, out.EVReactivePowerLimits);
+}
 
 template <>
 void convert(const DER_AC_ChargeParameterDiscoveryRequest& in,
              struct iso20_ac_der_iec_AC_ChargeParameterDiscoveryReqType& out) {
     init_iso20_ac_der_iec_AC_ChargeParameterDiscoveryReqType(&out);
     convert(in.header, out.Header);
-    std::visit(ModeRequestVisitor(out), in.transfer_mode);
+
+    convert(in.transfer_mode, out.DER_AC_CPDReqEnergyTransferMode);
+    CB_SET_USED(out.DER_AC_CPDReqEnergyTransferMode);
 }
 
 template <> int serialize_to_exi(const DER_AC_ChargeParameterDiscoveryRequest& in, exi_bitstream_t& out) {
@@ -376,7 +325,7 @@ template <> void convert(const datatypes::DerControl& in, struct iso20_ac_der_ie
     CPP2CB_CONVERT_IF_USED(in.max_level_dc_injection, out.MaximumLevelDCInjection);
 }
 
-template <typename InType> void convert(const InType& in, AC_ModeRes& out) {
+template <> void convert(const struct iso20_ac_der_iec_DER_AC_CPDResEnergyTransferModeType& in, DER_AC_ModeRes& out) {
     convert(in.EVSEMaximumChargePower, out.max_charge_power);
     CB2CPP_CONVERT_IF_USED(in.EVSEMaximumChargePower_L2, out.max_charge_power_L2);
     CB2CPP_CONVERT_IF_USED(in.EVSEMaximumChargePower_L3, out.max_charge_power_L3);
@@ -389,20 +338,7 @@ template <typename InType> void convert(const InType& in, AC_ModeRes& out) {
     CB2CPP_CONVERT_IF_USED(in.EVSEPresentActivePower, out.present_active_power);
     CB2CPP_CONVERT_IF_USED(in.EVSEPresentActivePower_L2, out.present_active_power_L2);
     CB2CPP_CONVERT_IF_USED(in.EVSEPresentActivePower_L3, out.present_active_power_L3);
-}
 
-template <> void convert(const struct iso20_ac_der_iec_BPT_AC_CPDResEnergyTransferModeType& in, BPT_AC_ModeRes& out) {
-    convert(in, static_cast<AC_ModeRes&>(out));
-    convert(in.EVSEMaximumDischargePower, out.max_discharge_power);
-    CB2CPP_CONVERT_IF_USED(in.EVSEMaximumDischargePower_L2, out.max_discharge_power_L2);
-    CB2CPP_CONVERT_IF_USED(in.EVSEMaximumDischargePower_L3, out.max_discharge_power_L3);
-    convert(in.EVSEMinimumDischargePower, out.min_discharge_power);
-    CB2CPP_CONVERT_IF_USED(in.EVSEMinimumDischargePower_L2, out.min_discharge_power_L2);
-    CB2CPP_CONVERT_IF_USED(in.EVSEMinimumDischargePower_L3, out.min_discharge_power_L3);
-}
-
-template <> void convert(const struct iso20_ac_der_iec_DER_AC_CPDResEnergyTransferModeType& in, DER_AC_ModeRes& out) {
-    convert(in, static_cast<AC_ModeRes&>(out));
     convert(in.EVSENominalChargePower, out.nominal_charge_power);
     CB2CPP_CONVERT_IF_USED(in.EVSENominalChargePower_L2, out.nominal_charge_power_L2);
     CB2CPP_CONVERT_IF_USED(in.EVSENominalChargePower_L3, out.nominal_charge_power_L3);
@@ -421,17 +357,11 @@ template <>
 void convert(const struct iso20_ac_der_iec_AC_ChargeParameterDiscoveryResType& in,
              DER_AC_ChargeParameterDiscoveryResponse& out) {
     convert(in.Header, out.header);
-    if (in.AC_CPDResEnergyTransferMode_isUsed) {
-        auto& mode_out = out.transfer_mode.emplace<AC_ModeRes>();
-        convert(in.AC_CPDResEnergyTransferMode, mode_out);
-    } else if (in.BPT_AC_CPDResEnergyTransferMode_isUsed) {
-        auto& mode_out = out.transfer_mode.emplace<BPT_AC_ModeRes>();
-        convert(in.BPT_AC_CPDResEnergyTransferMode, mode_out);
-    } else if (in.DER_AC_CPDResEnergyTransferMode_isUsed) {
-        auto& mode_out = out.transfer_mode.emplace<DER_AC_ModeRes>();
-        convert(in.DER_AC_CPDResEnergyTransferMode, mode_out);
+
+    if (in.DER_AC_CPDResEnergyTransferMode_isUsed) {
+        convert(in.DER_AC_CPDResEnergyTransferMode, out.transfer_mode);
     } else {
-        // FIXME (aw): fail, should not happen!
+        // TODO(SL): Add warning that a transfer mode other then DER
     }
 }
 
@@ -439,76 +369,38 @@ template <> void insert_type(VariantAccess& va, const struct iso20_ac_der_iec_AC
     va.insert_type<DER_AC_ChargeParameterDiscoveryResponse>(in);
 }
 
-struct ModeResponseVisitor {
-public:
-    ModeResponseVisitor(iso20_ac_der_iec_AC_ChargeParameterDiscoveryResType& res_) : res(res_) {};
-    void operator()(const AC_ModeRes& in) {
-        init_iso20_ac_der_iec_AC_CPDResEnergyTransferModeType(&res.AC_CPDResEnergyTransferMode);
+template <> void convert(const DER_AC_ModeRes& in, struct iso20_ac_der_iec_DER_AC_CPDResEnergyTransferModeType& out) {
+    init_iso20_ac_der_iec_DER_AC_CPDResEnergyTransferModeType(&out);
 
-        CB_SET_USED(res.AC_CPDResEnergyTransferMode);
-        convert_common(in, res.AC_CPDResEnergyTransferMode);
-    }
+    convert(in.max_charge_power, out.EVSEMaximumChargePower);
+    CPP2CB_CONVERT_IF_USED(in.max_charge_power_L2, out.EVSEMaximumChargePower_L2);
+    CPP2CB_CONVERT_IF_USED(in.max_charge_power_L3, out.EVSEMaximumChargePower_L3);
+    convert(in.min_charge_power, out.EVSEMinimumChargePower);
+    CPP2CB_CONVERT_IF_USED(in.min_charge_power_L2, out.EVSEMinimumChargePower_L2);
+    CPP2CB_CONVERT_IF_USED(in.min_charge_power_L3, out.EVSEMinimumChargePower_L3);
+    convert(in.nominal_frequency, out.EVSENominalFrequency);
+    CPP2CB_CONVERT_IF_USED(in.max_power_asymmetry, out.MaximumPowerAsymmetry);
+    CPP2CB_CONVERT_IF_USED(in.power_ramp_limitation, out.EVSEPowerRampLimitation);
+    CPP2CB_CONVERT_IF_USED(in.present_active_power, out.EVSEPresentActivePower);
+    CPP2CB_CONVERT_IF_USED(in.present_active_power_L2, out.EVSEPresentActivePower_L2);
+    CPP2CB_CONVERT_IF_USED(in.present_active_power_L3, out.EVSEPresentActivePower_L3);
 
-    void operator()(const BPT_AC_ModeRes& in) {
-        init_iso20_ac_der_iec_BPT_AC_CPDResEnergyTransferModeType(&res.BPT_AC_CPDResEnergyTransferMode);
+    convert(in.nominal_charge_power, out.EVSENominalChargePower);
+    CPP2CB_CONVERT_IF_USED(in.nominal_charge_power_L2, out.EVSENominalChargePower_L2);
+    CPP2CB_CONVERT_IF_USED(in.nominal_charge_power_L3, out.EVSENominalChargePower_L3);
+    convert(in.nominal_discharge_power, out.EVSENominalDischargePower);
 
-        CB_SET_USED(res.BPT_AC_CPDResEnergyTransferMode);
+    CPP2CB_CONVERT_IF_USED(in.nominal_discharge_power_L2, out.EVSENominalDischargePower_L2);
+    CPP2CB_CONVERT_IF_USED(in.nominal_discharge_power_L3, out.EVSENominalDischargePower_L3);
 
-        auto& out = res.BPT_AC_CPDResEnergyTransferMode;
-        convert_common(in, out);
+    convert(in.max_discharge_power, out.EVSEMaximumDischargePower);
+    CPP2CB_CONVERT_IF_USED(in.max_charge_power_L2, out.EVSEMaximumDischargePower_L2);
+    CPP2CB_CONVERT_IF_USED(in.max_charge_power_L3, out.EVSEMaximumDischargePower_L3);
 
-        convert(in.max_discharge_power, out.EVSEMaximumDischargePower);
-        CPP2CB_CONVERT_IF_USED(in.max_charge_power_L2, out.EVSEMaximumDischargePower_L2);
-        CPP2CB_CONVERT_IF_USED(in.max_charge_power_L3, out.EVSEMaximumDischargePower_L3);
-
-        convert(in.min_discharge_power, out.EVSEMinimumDischargePower);
-        CPP2CB_CONVERT_IF_USED(in.min_charge_power_L2, out.EVSEMinimumDischargePower_L2);
-        CPP2CB_CONVERT_IF_USED(in.min_charge_power_L3, out.EVSEMinimumDischargePower_L3);
-    }
-
-    void operator()(const DER_AC_ModeRes& in) {
-        init_iso20_ac_der_iec_DER_AC_CPDResEnergyTransferModeType(&res.DER_AC_CPDResEnergyTransferMode);
-        CB_SET_USED(res.DER_AC_CPDResEnergyTransferMode);
-
-        auto& out = res.DER_AC_CPDResEnergyTransferMode;
-        convert_common(in, out);
-
-        convert(in.nominal_charge_power, out.EVSENominalChargePower);
-        CPP2CB_CONVERT_IF_USED(in.nominal_charge_power_L2, out.EVSENominalChargePower_L2);
-        CPP2CB_CONVERT_IF_USED(in.nominal_charge_power_L3, out.EVSENominalChargePower_L3);
-        convert(in.nominal_discharge_power, out.EVSENominalDischargePower);
-
-        CPP2CB_CONVERT_IF_USED(in.nominal_discharge_power_L2, out.EVSENominalDischargePower_L2);
-        CPP2CB_CONVERT_IF_USED(in.nominal_discharge_power_L3, out.EVSENominalDischargePower_L3);
-
-        convert(in.max_discharge_power, out.EVSEMaximumDischargePower);
-        CPP2CB_CONVERT_IF_USED(in.max_charge_power_L2, out.EVSEMaximumDischargePower_L2);
-        CPP2CB_CONVERT_IF_USED(in.max_charge_power_L3, out.EVSEMaximumDischargePower_L3);
-
-        cb_convert_enum(in.operating_mode, out.EVOperatingMode);
-        cb_convert_enum(in.grid_connection_mode, out.GridConnectionMode);
-        convert(in.der_control, out.DERControl);
-    }
-
-    template <typename ModeResTypeIn, typename ModeResTypeOut>
-    static void convert_common(const ModeResTypeIn& in, ModeResTypeOut& out) {
-        convert(in.max_charge_power, out.EVSEMaximumChargePower);
-        CPP2CB_CONVERT_IF_USED(in.max_charge_power_L2, out.EVSEMaximumChargePower_L2);
-        CPP2CB_CONVERT_IF_USED(in.max_charge_power_L3, out.EVSEMaximumChargePower_L3);
-        convert(in.min_charge_power, out.EVSEMinimumChargePower);
-        CPP2CB_CONVERT_IF_USED(in.min_charge_power_L2, out.EVSEMinimumChargePower_L2);
-        CPP2CB_CONVERT_IF_USED(in.min_charge_power_L3, out.EVSEMinimumChargePower_L3);
-        convert(in.nominal_frequency, out.EVSENominalFrequency);
-        CPP2CB_CONVERT_IF_USED(in.max_power_asymmetry, out.MaximumPowerAsymmetry);
-        CPP2CB_CONVERT_IF_USED(in.power_ramp_limitation, out.EVSEPowerRampLimitation);
-        CPP2CB_CONVERT_IF_USED(in.present_active_power, out.EVSEPresentActivePower);
-        CPP2CB_CONVERT_IF_USED(in.present_active_power_L2, out.EVSEPresentActivePower_L2);
-        CPP2CB_CONVERT_IF_USED(in.present_active_power_L3, out.EVSEPresentActivePower_L3);
-    }
-
-private:
-    iso20_ac_der_iec_AC_ChargeParameterDiscoveryResType& res;
-};
+    cb_convert_enum(in.operating_mode, out.EVOperatingMode);
+    cb_convert_enum(in.grid_connection_mode, out.GridConnectionMode);
+    convert(in.der_control, out.DERControl);
+}
 
 template <>
 void convert(const DER_AC_ChargeParameterDiscoveryResponse& in,
@@ -518,7 +410,8 @@ void convert(const DER_AC_ChargeParameterDiscoveryResponse& in,
     convert(in.header, out.Header);
     cb_convert_enum(in.response_code, out.ResponseCode);
 
-    std::visit(ModeResponseVisitor(out), in.transfer_mode);
+    convert(in.transfer_mode, out.DER_AC_CPDResEnergyTransferMode);
+    CB_SET_USED(out.DER_AC_CPDResEnergyTransferMode);
 }
 
 template <> int serialize_to_exi(const DER_AC_ChargeParameterDiscoveryResponse& in, exi_bitstream_t& out) {

@@ -180,17 +180,13 @@ struct DER_AC_CPDResEnergyTransferMode : AC_CPDResEnergyTransferMode {
 
 struct DER_AC_ChargeParameterDiscoveryRequest {
     Header header;
-    std::variant<datatypes::AC_CPDReqEnergyTransferMode, datatypes::BPT_AC_CPDReqEnergyTransferMode,
-                 datatypes::DER_AC_CPDReqEnergyTransferMode>
-        transfer_mode;
+    datatypes::DER_AC_CPDReqEnergyTransferMode transfer_mode;
 };
 
 struct DER_AC_ChargeParameterDiscoveryResponse {
     Header header;
-    datatypes::ResponseCode response_code;
-    std::variant<datatypes::AC_CPDResEnergyTransferMode, datatypes::BPT_AC_CPDResEnergyTransferMode,
-                 datatypes::DER_AC_CPDResEnergyTransferMode>
-        transfer_mode = datatypes::AC_CPDResEnergyTransferMode();
+    datatypes::ResponseCode response_code{};
+    datatypes::DER_AC_CPDResEnergyTransferMode transfer_mode;
 };
 
 } // namespace iso15118::message_20
