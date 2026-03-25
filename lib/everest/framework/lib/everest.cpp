@@ -8,15 +8,13 @@
 #include <string_view>
 
 #include <boost/any.hpp>
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_generators.hpp>
-#include <boost/uuid/uuid_io.hpp>
 #include <everest/logging.hpp>
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 
 #include <date/date.h>
 #include <date/tz.h>
+#include <everest/helpers/helpers.hpp>
 #include <framework/everest.hpp>
 #include <utils/conversions.hpp>
 #include <utils/date.hpp>
@@ -367,7 +365,7 @@ json Everest::call_cmd(const Requirement& req, const std::string& cmd_name, cons
         }
     }
 
-    const std::string call_id = boost::uuids::to_string(boost::uuids::random_generator()());
+    const std::string call_id = everest::helpers::get_uuid();
 
     std::promise<CmdResult> res_promise;
     std::future<CmdResult> res_future = res_promise.get_future();

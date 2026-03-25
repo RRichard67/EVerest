@@ -30,8 +30,11 @@ target_link_libraries(tls
         OpenSSL::Crypto
         everest::evse_security
         everest::util
-    PRIVATE
-        everest::framework
+)
+
+set_target_properties(tls
+    PROPERTIES
+        POSITION_INDEPENDENT_CODE ON
 )
 
 if(EVEREST_CORE_BUILD_TESTING)
