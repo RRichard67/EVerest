@@ -138,8 +138,11 @@ void MessageHandler::add(const ParsedMessage& message) {
 
     MqttMessageType msg_type = MqttMessageType::ExternalMQTT; // Default to ExternalMQTT if msg_type is not present
 
-    if (message.data.is_object() && message.data.contains("msg_type")) {
-        msg_type = string_to_mqtt_message_type(message.data.at("msg_type").get<std::string>());
+    if (message.data.is_object()) {
+        auto msg_type_it = message.data.find("msg_type");
+        if (msg_type_it != message.data.end() && msg_type_it->is_string()) {
+            msg_type = string_to_mqtt_message_type(msg_type_it->get<std::string>());
+        }
     }
 
     if (msg_type == MqttMessageType::CmdResult || msg_type == MqttMessageType::GetConfigResponse) {
@@ -299,19 +302,16 @@ void MessageHandler::run_external_mqtt_worker() {
 }
 
 void MessageHandler::handle_operation_message(const std::string& topic, const json& payload) {
-    json data;
     MqttMessageType msg_type = MqttMessageType::ExternalMQTT;
 
     // Determine message type
-    if (payload.contains("msg_type")) {
-        msg_type = string_to_mqtt_message_type(payload.at("msg_type").get<std::string>());
+    auto msg_type_it = payload.find("msg_type");
+    if (msg_type_it != payload.end() && msg_type_it->is_string()) {
+        msg_type = string_to_mqtt_message_type(msg_type_it->get<std::string>());
     }
 
-    if (payload.contains("data")) {
-        data = payload.at("data");
-    } else {
-        data = payload;
-    }
+    auto data_it = payload.find("data");
+    const json& data = (data_it != payload.end()) ? *data_it : payload;
 
     switch (msg_type) {
     case MqttMessageType::Var:
@@ -339,12 +339,13 @@ void MessageHandler::handle_operation_message(const std::string& topic, const js
 }
 
 void MessageHandler::handle_result_message(const std::string& topic, const json& payload) {
-    if (!payload.contains("msg_type")) {
+    auto msg_type_it = payload.find("msg_type");
+    if (msg_type_it == payload.end()) {
         EVLOG_warning << "Received cmd_result message without msg_type: " << payload;
         return;
     }
 
-    const auto msg_type = string_to_mqtt_message_type(payload.at("msg_type").get<std::string>());
+    const auto msg_type = string_to_mqtt_message_type(msg_type_it->get<std::string>());
 
     if (msg_type == MqttMessageType::CmdResult) {
         handle_cmd_result(topic, payload);
