@@ -40,3 +40,22 @@ set_target_properties(tls
 if(EVEREST_CORE_BUILD_TESTING)
     add_subdirectory(tests)
 endif()
+
+if(DISABLE_EDM)
+    install(
+        TARGETS
+            tls
+        EXPORT everest-tls-targets
+        LIBRARY
+    )
+
+    evc_setup_package(
+        NAME everest-tls
+        EXPORT everest-tls-targets
+        NAMESPACE everest
+        ADDITIONAL_CONTENT
+            "find_dependency(everest-util)"
+            "find_dependency(everest-evse-security)"
+            "find_dependency(OpenSSL)"
+    )
+endif()
