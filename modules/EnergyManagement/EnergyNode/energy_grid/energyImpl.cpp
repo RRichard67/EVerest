@@ -24,7 +24,7 @@ void energyImpl::init() {
     energy_state_handle->energy_flow_request.schedule_export = get_local_schedule();
 
     for (auto& entry : mod->r_energy_consumer) {
-        entry->subscribe_energy_flow_request([this](types::energy::EnergyFlowRequest e) {
+        entry->subscribe_energy_flow_request([this](types::energy::EnergyFlowRequest const& e) {
             // Received new energy_flow_request object from a child. Update in the cached object and republish.
             auto energy_state_handle = energy_state.handle();
 
@@ -45,7 +45,7 @@ void energyImpl::init() {
     }
 
     if (!mod->r_powermeter.empty()) {
-        mod->r_powermeter[0]->subscribe_powermeter([this](types::powermeter::Powermeter p) {
+        mod->r_powermeter[0]->subscribe_powermeter([this](types::powermeter::Powermeter const& p) {
             EVLOG_debug << "Incoming powermeter readings: " << p;
             auto energy_state_handle = energy_state.handle();
             energy_state_handle->energy_flow_request.energy_usage_root = p;
