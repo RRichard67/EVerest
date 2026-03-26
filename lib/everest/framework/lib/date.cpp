@@ -25,7 +25,7 @@ std::chrono::time_point<date::utc_clock> from_rfc3339(const std::string& t) {
     // // if the string has a certain length a faster parsing method can be attempted first
     std::string_view input(t);
     if (input.size() < fast_maxlen) {
-        return from_rfc3339(t);
+        return from_rfc3339_slow(t);
     }
     std::string_view y_str = input.substr(0, 4);
     std::string_view m_str = input.substr(5, 7);
@@ -46,49 +46,49 @@ std::chrono::time_point<date::utc_clock> from_rfc3339(const std::string& t) {
     {
         auto [ptr, ec] = std::from_chars(y_str.data(), y_str.data() + y_str.size(), y);
         if (ec != std::errc{}) {
-            return from_rfc3339(t);
+            return from_rfc3339_slow(t);
         }
     }
 
     {
         auto [ptr, ec] = std::from_chars(m_str.data(), m_str.data() + m_str.size(), m);
         if (ec != std::errc{}) {
-            return from_rfc3339(t);
+            return from_rfc3339_slow(t);
         }
     }
 
     {
         auto [ptr, ec] = std::from_chars(d_str.data(), d_str.data() + d_str.size(), d);
         if (ec != std::errc{}) {
-            return from_rfc3339(t);
+            return from_rfc3339_slow(t);
         }
     }
 
     {
         auto [ptr, ec] = std::from_chars(h_str.data(), h_str.data() + h_str.size(), h);
         if (ec != std::errc{}) {
-            return from_rfc3339(t);
+            return from_rfc3339_slow(t);
         }
     }
 
     {
         auto [ptr, ec] = std::from_chars(M_str.data(), M_str.data() + M_str.size(), M);
         if (ec != std::errc{}) {
-            return from_rfc3339(t);
+            return from_rfc3339_slow(t);
         }
     }
 
     {
         auto [ptr, ec] = std::from_chars(s_str.data(), s_str.data() + s_str.size(), s);
         if (ec != std::errc{}) {
-            return from_rfc3339(t);
+            return from_rfc3339_slow(t);
         }
     }
 
     {
         auto [ptr, ec] = std::from_chars(ms_str.data(), ms_str.data() + ms_str.size(), ms);
         if (ec != std::errc{}) {
-            return from_rfc3339(t);
+            return from_rfc3339_slow(t);
         }
     }
 
