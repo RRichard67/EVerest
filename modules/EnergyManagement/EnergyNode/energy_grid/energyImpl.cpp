@@ -113,13 +113,14 @@ void energyImpl::set_external_limits(types::energy::ExternalLimits& l) {
 
 void energyImpl::publish_complete_energy_object(const EnergyState& state) {
     // This method is always called from contexts that already hold the energy_state lock
-    types::energy::EnergyFlowRequest energy_complete = state.energy_flow_request;
 
     if (not state.energy_flow_request.schedule_export.empty() and not state.energy_pricing.schedule_export.empty()) {
+        types::energy::EnergyFlowRequest energy_complete = state.energy_flow_request;
         merge_price_into_schedule(energy_complete.schedule_export, state.energy_pricing.schedule_export);
+        publish_energy_flow_request(energy_complete);
     }
 
-    publish_energy_flow_request(energy_complete);
+    publish_energy_flow_request(state.energy_flow_request);
 }
 
 void energyImpl::merge_price_into_schedule(std::vector<types::energy::ScheduleReqEntry>& schedule,
