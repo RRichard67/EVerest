@@ -77,7 +77,7 @@ bool is_equal_case_insensitive(const types::authorization::ProvidedIdToken& toke
 }
 
 namespace {
-boost::uuids::random_generator get_rng() {
+boost::uuids::random_generator& get_rng() {
     static thread_local boost::uuids::random_generator rng;
     return rng;
 }
