@@ -167,4 +167,3 @@ Important links
 
       * `Discussion Forum (Zulip) <https://lfenergy.zulipchat.com/>`_
       * `Live Events & Calendar <https://zoom-lfx.platform.linuxfoundation.org/meetings/everest?view=week>`_
- 

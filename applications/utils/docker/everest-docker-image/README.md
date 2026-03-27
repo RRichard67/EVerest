@@ -22,7 +22,7 @@ Specify the following options to create your desired docker image of EVerest:
 * branch: Git branch or tag name (e.g main or 2024.6.0) - Optional, defaults to: main
 * conf: Path to EVerest config file (e.g. /home/$(whoami)/checkout/everest-workspace/EVerest/config/ config-sil.yaml) - Required.
 * ocpp-conf: Path to EVerest OCPP config file (e.g. /home/$(whoami)/checkout/everest-workspace/libocpp/aux/config-docker.json) - Optional, defaults to: ocpp-config.json
-* name: Name of the docker image (e.g EVerest) - Optional, defaults to: EVerest
+* name: Name of the docker image (e.g everest) - Optional, defaults to: everest
 * build-date: Build date of the docker image, is reflected in its name and can have an effect on caching - Optional, defaults to the current datetime
 
 ```bash

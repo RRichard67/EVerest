@@ -12,4 +12,3 @@ def pytest_addoption(parser):
 def pytest_configure(config):
     everest_prefix = config.getoption("--everest-prefix")
     shutil.copy("conf/ocpp16-config.json", f"{everest_prefix}/share/everest/modules/OCPP")
-
